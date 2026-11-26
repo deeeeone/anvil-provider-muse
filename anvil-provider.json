@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/deeeeone/Anvil/main/docs/anvil-provider.schema.json",
+  "spec": 1,
+  "id": "muse-web",
+  "name": "Muse (on device)",
+  "description": "Meta's Muse Spark through your own muse.ai account, run on this Mac by a small local proxy.",
+  "symbol": "sparkles",
+  "homepage": "https://github.com/deeeeone/anvil-provider-muse",
+  "type": "openai",
+  "baseURL": "http://127.0.0.1:38787/v1",
+  "server": {
+    "setup": ["sh", "setup.sh"],
+    "command": ["sh", "start.sh"],
+    "env": { "PORT": "38787" },
+    "ready": "http://127.0.0.1:38787/healthz",
+    "startupTimeout": 120,
+    "setupTimeout": 900
+  },
+  "auth": {
+    "type": "web",
+    "loginURL": "https://muse.ai/",
+    "domain": "muse.ai",
+    "cookies": ["hatch_sess"],
+    "manual": true
+  },
+  "models": [
+    { "id": "muse-spark", "name": "Muse Spark", "context": 128000 }
+  ],
+  "capabilities": { "stop": false, "streamUsage": false },
+  "free": true
+}

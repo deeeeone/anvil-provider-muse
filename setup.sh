@@ -39,5 +39,18 @@ echo "setup: installing npm packages ..."
 cd upstream
 npm ci --omit=dev --no-audit --no-fund --loglevel=error
 
+# cycletls starts its helper through /bin/sh with the path unquoted, which breaks in any folder
+# with a space in it, such as Anvil's "~/Library/Application Support". Start it without a shell.
+echo "setup: patching cycletls to start its helper without a shell ..."
+node -e '
+  const fs = require("fs");
+  const f = "node_modules/cycletls/dist/index.js";
+  const src = fs.readFileSync(f, "utf8");
+  const from = /shell: process\.platform !== "win32",/;
+  if (src.includes("shell: false, // anvil-provider-muse")) process.exit(0);
+  if (!from.test(src)) { console.error("setup: cycletls changed; the spawn patch no longer applies"); process.exit(1); }
+  fs.writeFileSync(f, src.replace(from, "shell: false, // anvil-provider-muse"));
+'
+
 SHORT=$(git rev-parse --short "$COMMIT")
 echo "setup: muse-ai-api ready at $SHORT"

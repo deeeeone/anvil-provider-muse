@@ -15,11 +15,20 @@ Talk to Meta's **Muse Spark** model, the one behind the muse.ai agent, from Anvi
 
 | File | Purpose |
 |---|---|
-| `setup.sh` | Clones the upstream project at a pinned commit and installs its npm packages into `upstream/`. |
+| `setup.sh` | Clones the upstream project at a pinned commit and installs its npm packages into `upstream/`, then applies three small fixes (below). |
 | `start.sh` | Writes your muse.ai sign-in from Anvil into `state/`, then starts the proxy on `127.0.0.1:38787`. |
+| `patches/scrape-vm.ts` | Replaces the upstream's VM scraper, which looks for a page format muse.ai no longer uses. |
 | `anvil-provider.json` | Tells Anvil where the proxy lives, how to sign in, and which model to offer. |
 
 Everything the plugin creates (the upstream copy, session files and logs) stays inside this folder. Your home directory is not touched.
+
+## Fixes applied to the upstream
+
+muse.ai changed after the pinned upstream commit, so `setup.sh` patches three things in `upstream/`:
+
+- **cycletls helper path.** cycletls starts its helper through the shell without quoting the path, which fails in folders with spaces such as `~/Library/Application Support`. It now starts the helper directly.
+- **VM address.** The signed-in page now carries your VM's address as escaped JSON (`gatewayUrl`), not `activeGatewayUrl`. `patches/scrape-vm.ts` reads both.
+- **Same-origin headers.** muse.ai answers 403 to session requests that lack the `Sec-Fetch-*` headers every browser sends with its own requests. The session requests now include them.
 
 ## Where your data goes
 

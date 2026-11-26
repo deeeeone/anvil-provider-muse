@@ -52,5 +52,22 @@ node -e '
   fs.writeFileSync(f, src.replace(from, "shell: false, // anvil-provider-muse"));
 '
 
+# muse.ai moved the VM address into escaped server data; the upstream scraper only knows the old key.
+echo "setup: installing the updated VM scraper ..."
+cp ../patches/scrape-vm.ts src/bootstrap/scrape-vm.ts
+
+# muse.ai refuses POSTs that don't look same-origin (403). Browsers send these headers on their own.
+echo "setup: adding same-origin headers to the session requests ..."
+node -e '
+  const fs = require("fs");
+  const f = "src/bootstrap/session.ts";
+  const src = fs.readFileSync(f, "utf8");
+  const mark = "// anvil-provider-muse: same-origin";
+  if (src.includes(mark)) process.exit(0);
+  const from = "\"Content-Type\": \"application/json\",";
+  if (src.split(from).length !== 2) { console.error("setup: session.ts changed; the header patch no longer applies"); process.exit(1); }
+  fs.writeFileSync(f, src.replace(from, from + " " + mark + "\n        \"Sec-Fetch-Site\": \"same-origin\", \"Sec-Fetch-Mode\": \"cors\", \"Sec-Fetch-Dest\": \"empty\", \"Accept\": \"*/*\","));
+'
+
 SHORT=$(git rev-parse --short "$COMMIT")
 echo "setup: muse-ai-api ready at $SHORT"
